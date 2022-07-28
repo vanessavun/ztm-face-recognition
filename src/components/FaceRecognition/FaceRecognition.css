@@ -5,4 +5,5 @@
     flex-wrap: wrap;
     justify-content: center;
     cursor: pointer;
+    z-index: 999;
 }

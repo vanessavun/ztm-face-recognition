@@ -1,7 +1,8 @@
 body {
   margin: 0;
   font-family: 'EB Garamond', 'Courier New', Courier, monospace;
-  background: linear-gradient(90deg, #3F2B96 0%, #A8C0FF 100%);
+  background: rgb(60,4,134);
+  background: linear-gradient(90deg, rgba(60,4,134,1) 11%, rgba(255,175,216,1) 100%);
 }
 
 button {
