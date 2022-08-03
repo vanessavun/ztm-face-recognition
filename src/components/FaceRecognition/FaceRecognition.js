@@ -9,8 +9,8 @@ export default function FaceRecognition({ imageURL, box }) {
         left: box.leftCol
     }
 
-    console.log("FaceRecognition box: ", box)
-    console.log("FaceRecognition box topRow: ", box.topRow)
+    // console.log("FaceRecognition box: ", box)
+    // console.log("FaceRecognition box topRow: ", box.topRow)
 
     return (
         <div className='center ma'>

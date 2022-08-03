@@ -1,12 +1,13 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import Navigation from './components/Navigation/Navigation';
 import Logo from './components/Logo/Logo';
 import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
 import Rank from './components/Rank/Rank';
 import FaceRecognition from './components/FaceRecognition/FaceRecognition';
+import Signin from './components/Signin/Signin';
+import Register from './components/Register/Register';
 import Particles from 'react-tsparticles';
 import { loadFull } from 'tsparticles';
-
 import './App.css';
 
 const options = {
@@ -25,7 +26,7 @@ const options = {
       width: 1,
     },
     collisions: {
-      enable: true,
+      enable: false,
     },
     move: {
       direction: "none",
@@ -34,13 +35,13 @@ const options = {
         default: "bounce",
       },
       random: false,
-      speed: 2,
+      speed: 1,
       straight: false,
     },
     number: {
       density: {
         enable: true,
-        area: 800,
+        area: 900,
       },
       value: 80,
     },
@@ -48,20 +49,56 @@ const options = {
       value: 0.2,
     },
     shape: {
-      type: "circle",
+      type: "star",
     },
     size: {
-      value: { min: 1, max: 5 },
+      value: { min: 1, max: 4 },
     },
   },
 };
 
-function App() {
-  const [input, setInput] = React.useState('')
-  const [imageURL, setImageURL] = React.useState('')
-  const [box, setBox] = React.useState({})
+const particlesInit = async (main) => {
+	// console.log(main);
+	await loadFull(main);
+};
 
-  function calculateFaceLocation(data) {
+const particlesLoaded = (container) => {
+	// console.log(container);
+};
+
+const initialState = {
+    input: '',
+    imageURL: '',
+    box: {},
+    route: 'signin',
+    isSignedIn: false,
+    user: {
+      id: '',
+      name: '',
+      email: '',
+      entries: 0,
+      joined: ''
+    }
+}
+
+class App extends React.Component {
+
+  constructor() {
+    super();
+    this.state = initialState;
+  }
+
+  loadUser = (data) => {
+    this.setState({user: {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      entries: data.entries,
+      joined: data.joined
+    }})
+  }
+
+  calculateFaceLocation = (data) => {
     const parsed = JSON.parse(data);
     const clarifaiFace = parsed.outputs[0].data.regions[0].region_info.bounding_box;
     const image = document.getElementById('inputimage');
@@ -75,23 +112,22 @@ function App() {
     }
   }
 
-  function displayFaceBox(box) {
-    console.log("Display Facebox: ", box)
-    setBox(box)
+  displayFaceBox = (box) => {
+    this.setState({box});
   }
 
-  function onInputChange(event) {
-    setInput(event.target.value)
+  onInputChange = (event) => {
+    this.setState({input: event.target.value});
   }
 
-  function onButtonSubmit() {
-    setImageURL(input)
+  onButtonSubmit = () => {
+    this.setState({imageURL: this.state.input});
     const USER_ID = 'nessabyte';
     const PAT = '63d9310bff304a7486be5471c990b3fc';
     const APP_ID = 'my-first-application';
     const MODEL_ID = 'face-detection';
     const MODEL_VERSION_ID = '45fb9a671625463fa646c3523a3087d5';    
-    const IMAGE_URL = input;
+    const IMAGE_URL = this.state.input;
     const raw = JSON.stringify({
         "user_app_id": {
             "user_id": USER_ID,
@@ -119,41 +155,78 @@ function App() {
 
     fetch("https://api.clarifai.com/v2/models/" + MODEL_ID + "/versions/" + MODEL_VERSION_ID + "/outputs", requestOptions)
         .then(response => response.text())
-        .then(result => displayFaceBox(calculateFaceLocation(result)))
+        .then(result => {
+          if (result) {
+            fetch('http://localhost:3000/image', {
+              method: 'put',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                id: this.state.user.id
+              })
+            })
+            .then(result => result.json())
+            .then(count => {
+              this.setState(Object.assign(this.state.user, { entries: count }))
+            })
+            .catch(console.log)
+          }
+          this.displayFaceBox(this.calculateFaceLocation(result))
+        })  
         .catch(error => console.log('error', error));
   }
 
-  const particlesInit = useCallback(async(main) => {
-    await loadFull(main);
-  }, []);
+  onRouteChange = (route) => {
+    if (route === 'signout') {
+      this.setState(initialState)
+    } else if (route === 'home') {
+      this.setState({isSignedIn: true})
+    }
+    this.setState({route: route});
+  }
 
-  const particlesLoaded = useCallback((container) => {
-    console.log(container)
-  }, [])
-
-  return (
-    <div className="App">
+  render() {
+    const { isSignedIn, imageURL, route, box } = this.state;
+    return (
+      <div className="App">
+        <Navigation onRouteChange={this.onRouteChange} isSignedIn={isSignedIn} />
+        { route === 'home' 
+        ? <div>
+            <Logo />
+            <Rank
+              name={this.state.user.name}
+              entries={this.state.user.entries} />
+            <ImageLinkForm 
+              onInputChange={this.onInputChange}
+              onButtonSubmit={this.onButtonSubmit} 
+            />
+            <FaceRecognition 
+              imageURL={imageURL}
+              box={box}
+            />
+          </div>
+        : (
+            route === 'signin' 
+            ? <Signin 
+                loadUser={this.loadUser}
+                onRouteChange={this.onRouteChange} /> 
+            : <Register 
+                loadUser={this.loadUser} 
+                onRouteChange={this.onRouteChange} />
+          )
+        
+        }
+        
+        <Particles
+          id="tsparticles"
+          options={options}
+          init={particlesInit}
+          loaded={particlesLoaded}
+        />
+      </div>
       
-      <Navigation />
-      <Logo />
-      <Rank />
-      <ImageLinkForm 
-        onInputChange={onInputChange}
-        onButtonSubmit={onButtonSubmit} 
-      />
-      <FaceRecognition 
-        imageURL={imageURL}
-        box={box}
-      />
-      <Particles
-        id="tsparticles"
-        options={options}
-        init={particlesInit}
-        loaded={particlesLoaded}
-      />
-    </div>
-    
-  );
+    );
+  }
+  
 }
 
 
