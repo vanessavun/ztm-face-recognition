@@ -99,8 +99,7 @@ class App extends React.Component {
   }
 
   calculateFaceLocation = (data) => {
-    const parsed = JSON.parse(data);
-    const clarifaiFace = parsed.outputs[0].data.regions[0].region_info.bounding_box;
+    const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
     const image = document.getElementById('inputimage');
     const width = Number(image.width);
     const height = Number(image.height);
@@ -122,57 +121,33 @@ class App extends React.Component {
 
   onButtonSubmit = () => {
     this.setState({imageURL: this.state.input});
-    const USER_ID = 'nessabyte';
-    const PAT = '63d9310bff304a7486be5471c990b3fc';
-    const APP_ID = 'my-first-application';
-    const MODEL_ID = 'face-detection';
-    const MODEL_VERSION_ID = '45fb9a671625463fa646c3523a3087d5';    
-    const IMAGE_URL = this.state.input;
-    const raw = JSON.stringify({
-        "user_app_id": {
-            "user_id": USER_ID,
-            "app_id": APP_ID
-        },
-        "inputs": [
-            {
-                "data": {
-                    "image": {
-                        "url": IMAGE_URL
-                    }
-                }
-            }
-        ]
-    });
-
-    const requestOptions = {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Key ' + PAT
-        },
-        body: raw
-    };
-
-    fetch("https://api.clarifai.com/v2/models/" + MODEL_ID + "/versions/" + MODEL_VERSION_ID + "/outputs", requestOptions)
-        .then(response => response.text())
-        .then(result => {
-          if (result) {
-            fetch('http://localhost:3000/image', {
-              method: 'put',
-              headers: {'Content-Type': 'application/json'},
-              body: JSON.stringify({
-                id: this.state.user.id
-              })
+    //fetch result from Face Recognition API
+    fetch("http://localhost:3000/imageurl", {
+      method: 'post',
+      headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              id: this.state.input
             })
-            .then(result => result.json())
-            .then(count => {
-              this.setState(Object.assign(this.state.user, { entries: count }))
+    })
+    .then(result => result.json())
+      .then(result => {
+        if (result) {
+          fetch('http://localhost:3000/image', {
+            method: 'put',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              id: this.state.user.id
             })
-            .catch(console.log)
-          }
-          this.displayFaceBox(this.calculateFaceLocation(result))
-        })  
-        .catch(error => console.log('error', error));
+          })
+          .then(result => result.json())
+          .then(count => {
+            this.setState(Object.assign(this.state.user, { entries: count }))
+          })
+          .catch(console.log)
+        }
+      this.displayFaceBox(this.calculateFaceLocation(result))
+      })  
+      .catch(error => console.log('error', error));
   }
 
   onRouteChange = (route) => {
