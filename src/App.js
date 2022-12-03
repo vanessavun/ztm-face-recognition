@@ -122,7 +122,7 @@ class App extends React.Component {
   onButtonSubmit = () => {
     this.setState({imageURL: this.state.input});
     //fetch result from Face Recognition API
-    fetch("https://peaceful-ocean-02180.herokuapp.com/imageurl", {
+    fetch("https://face-recognition-api-b5ey.onrender.com/imageurl", {
       method: 'post',
       headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -132,7 +132,7 @@ class App extends React.Component {
     .then(result => result.json())
       .then(result => {
         if (result) {
-          fetch('https://peaceful-ocean-02180.herokuapp.com/image', {
+          fetch('https://face-recognition-api-b5ey.onrender.com/image', {
             method: 'put',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
