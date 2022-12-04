@@ -69,7 +69,8 @@ const particlesLoaded = (container) => {
 const initialState = {
     input: '',
     imageURL: '',
-    box: {},
+    // box: {},
+    boxes: [],
     route: 'signin',
     isSignedIn: false,
     user: {
@@ -99,20 +100,33 @@ class App extends React.Component {
   }
 
   calculateFaceLocation = (data) => {
-    const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
     const image = document.getElementById('inputimage');
     const width = Number(image.width);
     const height = Number(image.height);
-    return {
-      leftCol: clarifaiFace.left_col * width,
-      topRow: clarifaiFace.top_row * height,
-      rightCol: width - (clarifaiFace.right_col * width),
-      bottomRow: height - (clarifaiFace.bottom_row * height)
-    }
+    const faceRegions = data.outputs[0].data.regions;
+    // const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
+    const clarifaiFaces = faceRegions.map(region => {
+      return region.region_info.bounding_box;
+    })
+    const boxes = clarifaiFaces.map(bounding_box => {
+      return {
+        leftCol: bounding_box.left_col * width,
+        topRow: bounding_box.top_row * height,
+        rightCol: width - (bounding_box.right_col * width),
+        bottomRow: height - (bounding_box.bottom_row * height)
+      }
+    })
+    // return {
+    //   leftCol: clarifaiFace.left_col * width,
+    //   topRow: clarifaiFace.top_row * height,
+    //   rightCol: width - (clarifaiFace.right_col * width),
+    //   bottomRow: height - (clarifaiFace.bottom_row * height)
+    // }
+    return boxes;
   }
 
-  displayFaceBox = (box) => {
-    this.setState({box});
+  displayFaceBox = (boxes) => {
+    this.setState({boxes});
   }
 
   onInputChange = (event) => {
@@ -160,7 +174,7 @@ class App extends React.Component {
   }
 
   render() {
-    const { isSignedIn, imageURL, route, box } = this.state;
+    const { isSignedIn, imageURL, route, boxes } = this.state;
     return (
       <div className="App">
         <Navigation onRouteChange={this.onRouteChange} isSignedIn={isSignedIn} />
@@ -176,7 +190,7 @@ class App extends React.Component {
             />
             <FaceRecognition 
               imageURL={imageURL}
-              box={box}
+              box={boxes}
             />
           </div>
         : (
