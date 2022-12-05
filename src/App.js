@@ -58,7 +58,6 @@ const options = {
 };
 
 const particlesInit = async (main) => {
-	// console.log(main);
 	await loadFull(main);
 };
 
@@ -69,8 +68,7 @@ const particlesLoaded = (container) => {
 const initialState = {
     input: '',
     imageURL: '',
-    // box: {},
-    boxes: [],
+    box: {},
     route: 'signin',
     isSignedIn: false,
     user: {
@@ -103,30 +101,17 @@ class App extends React.Component {
     const image = document.getElementById('inputimage');
     const width = Number(image.width);
     const height = Number(image.height);
-    const faceRegions = data.outputs[0].data.regions;
-    // const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
-    const clarifaiFaces = faceRegions.map(region => {
-      return region.region_info.bounding_box;
-    })
-    const boxes = clarifaiFaces.map(bounding_box => {
-      return {
-        leftCol: bounding_box.left_col * width,
-        topRow: bounding_box.top_row * height,
-        rightCol: width - (bounding_box.right_col * width),
-        bottomRow: height - (bounding_box.bottom_row * height)
-      }
-    })
-    // return {
-    //   leftCol: clarifaiFace.left_col * width,
-    //   topRow: clarifaiFace.top_row * height,
-    //   rightCol: width - (clarifaiFace.right_col * width),
-    //   bottomRow: height - (clarifaiFace.bottom_row * height)
-    // }
-    return boxes;
+    const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
+    return {
+      leftCol: clarifaiFace.left_col * width,
+      topRow: clarifaiFace.top_row * height,
+      rightCol: width - (clarifaiFace.right_col * width),
+      bottomRow: height - (clarifaiFace.bottom_row * height)
+    }
   }
 
-  displayFaceBox = (boxes) => {
-    this.setState({boxes});
+  displayFaceBox = (box) => {
+    this.setState({box});
   }
 
   onInputChange = (event) => {
@@ -135,7 +120,6 @@ class App extends React.Component {
 
   onButtonSubmit = () => {
     this.setState({imageURL: this.state.input});
-    //fetch result from Face Recognition API
     fetch("https://face-recognition-api-b5ey.onrender.com/imageurl", {
       method: 'post',
       headers: {'Content-Type': 'application/json'},
@@ -174,7 +158,7 @@ class App extends React.Component {
   }
 
   render() {
-    const { isSignedIn, imageURL, route, boxes } = this.state;
+    const { isSignedIn, imageURL, route, box } = this.state;
     return (
       <div className="App">
         <Navigation onRouteChange={this.onRouteChange} isSignedIn={isSignedIn} />
@@ -190,7 +174,7 @@ class App extends React.Component {
             />
             <FaceRecognition 
               imageURL={imageURL}
-              box={boxes}
+              box={box}
             />
           </div>
         : (

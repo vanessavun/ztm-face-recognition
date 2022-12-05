@@ -1,7 +1,14 @@
 import React from 'react';
 import './FaceRecognition.css';
 
-export default function FaceRecognition({ imageURL, boxes }) {
+export default function FaceRecognition({ imageURL, box }) {
+    const styles = {
+        top: box.topRow, 
+        right: box.rightCol, 
+        bottom: box.bottomRow, 
+        left: box.leftCol
+    }
+
 
     return (
         <div className='center ma'>
@@ -9,12 +16,7 @@ export default function FaceRecognition({ imageURL, boxes }) {
             <img id="inputimage" alt="" src={imageURL} className="mt3" width="500px" height="auto" />
             {boxes.map((box,i) => {
                 return(
-                    <div key={i}className='bounding-box' style={{
-                        top: box.topRow, 
-                        right: box.rightCol, 
-                        bottom: box.bottomRow, 
-                        left: box.leftCol
-                    }}></div>
+                    <div key={i}className='bounding-box' style={styles}></div>
                 )
             })}
             </div>
